@@ -11,7 +11,7 @@ REPLACE_QUERY = in GRAPH_NAME replace SELECT_QUERY_NO_ELEMENT with OBJECT | in G
 CONSTRUCT_QUERY = construct GRAPH_NAME
 DELETE_QUERY = delete GRAPH_NAME | delete GRAPH_NAME where FILTER_START
 
-OPERATION = ARITHMETIC_OPERATION | LOGICAL_OPERATION
+OPERATION = ARITHMETIC_OPERATION | LOGICAL_OPERATION | GRAPH_OPERATION
 ARITHMETIC_OPERATION =  [+-*/] (SELECT_ELEMENT_QUERY) (SELECT_ELEMENT_QUERY)
 ==> elements must be floats/reals/integers (type checking performed upon execution)
 ==> returns a float/real/integer  
@@ -19,6 +19,12 @@ ARITHMETIC_OPERATION =  [+-*/] (SELECT_ELEMENT_QUERY) (SELECT_ELEMENT_QUERY)
 LOGICAL_OPERATION = [< > == != <= >=] (SELECT_ELEMENT_QUERY) (SELECT_ELEMENT_QUERY)
 ==> elements must be of the same type (type checking performed upon execution)
 ==> returns a boolean
+
+GRAPH_OPERATION = [union intersection difference] (SELECT_ELEMENT_QUERY) (SELECT_ELEMENT_QUERY) | GRAPH_OPERATION_SINGLE
+
+GRAPH_OPERATION_SINGLE = [min max] (SELECT_ELEMENT_QUERY)
+==> takes the min/max object value for each subject/predicate pair 
+==> requires all objects to be of the same type and either ints or strs 
 
 GRAPH_NAME = [a-zA-Z0-9].ttl
 ELEMENT = @subject | @predicate | @object
