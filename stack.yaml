@@ -17,8 +17,8 @@
 #
 # snapshot: ./custom-snapshot.yaml
 # snapshot: https://example.com/snapshots/2024-01-01.yaml
-snapshot:
-  lts-21.25
+# snapshot: ghc-9.4.8
+snapshot: lts-22.43
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
