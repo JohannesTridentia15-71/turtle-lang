@@ -29,9 +29,9 @@ GRAPH_OPERATION_SINGLE = [min max] (SELECT_ELEMENT_QUERY)
 GRAPH_NAME = [a-zA-Z0-9].ttl
 ELEMENT = #subject | #predicate | #object
 BRANCH = <SUBJECT> <PREDICATE> <OBJECT>
-SUBJECT = URI
-PREDICATE = URI
-OBJECT = URI | LITERAL
+SUBJECT = subject~ URI
+PREDICATE = predicate~ URI
+OBJECT = object~ URI | LITERAL
 ==> Note URI grammar comes from RFC 3986 
 
 
