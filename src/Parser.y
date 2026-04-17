@@ -24,6 +24,7 @@ import Lexer
     with                { TokenWith _ }
     construct           { TokenConstruct _ }
     delete              { TokenDelete _ }
+    start               { TokenStart _ }
     evaluate            { TokenEvaluate _ }
     union               { TokenUnion _ }
     intersection        { TokenIntersection _ }
@@ -41,6 +42,10 @@ import Lexer
     comp_operand        { TokenCompOperator _ $$ }
     save_to             { TokenSaveTo _ $$ }
     literal             { TokenLiteral _ $$ }
+
+%left not
+%nonassoc and or
+
 
 %%
 
@@ -123,8 +128,8 @@ GraphOperationSingle
     | max SelectElementQuery                   { GMax $2 }
 
 FilterStart
-    : Filter and FilterFinal                   { FAnd $1 $3 }
-    | Filter or FilterFinal                    { FOr $1 $3 }
+    : start Filter and start FilterFinal                   { FAnd $2 $5 }
+    | start Filter or start FilterFinal                    { FOr $2 $5 }
     | not Filter                               { FNot $2 }
 
 Filter

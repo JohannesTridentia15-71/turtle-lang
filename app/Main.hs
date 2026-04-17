@@ -12,3 +12,4 @@ main = do
   text <- readFile filename
   let tree = parseTTL $ alexScanTokens text
   print tree
+  

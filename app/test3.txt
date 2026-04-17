@@ -1,0 +1,1 @@
+add <http://example.org/nmg><http://ont.example.org/worksFor><http://example.org/uos> to blob save to blob
