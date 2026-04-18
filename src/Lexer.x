@@ -11,22 +11,20 @@ $special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 -- note that this is a very loose, non-binding definition of the uri syntax, but it should be sufficient for our purposes
 -- the RFC 3986 definition is much too complicated. 
 -- it could accept some invalid URIs, this might be a weakpoint in the future.
-@uri = "<" [^>]* ">"
-@ttl = \.ttl
-@filename = [a-z][a-zA-Z0-9\-_]*@ttl
-@graphname = @filename
+@uri = [A-Za-z0-9$special\:]+
+@graphname = [a-z][a-zA-Z0-9\-_]*.ttl
+@filename = [a-zA-Z0-9\-_]+\.ttl
 -- defined as to avoid repettion in the branch rule
 @element = @uri | @literal
-@branch = \< @uri \>\< @uri \>\< @element \>
+@branch = \<@uri\>\<@uri\>\<@element\>
 @operands = \+|\*|\-|\\
-@comparison = ==|\=|!\=|\<|\>|\<\=|\>\=
+@comparison = \=|\!\=|\<|\>|\<\=|\>\=
 
 tokens :-
 
     $white+                 ; 
-    "select_from"           { (\p s -> TokenSelectFrom p) }
-    "select #object"        { (\p s -> TokenSelectObject p) }
-    "save to"               { (\p s -> TokenSaveTo p s) } 
+    \(                      ;
+    \)                      ;
     "select"                { (\p s -> TokenSelect p) }
     "where"                 { (\p s -> TokenWhere p) }
     "from"                  { (\p s -> TokenFrom p) }
@@ -38,6 +36,7 @@ tokens :-
     "with"                  { (\p s -> TokenWith p) }
     "construct"             { (\p s -> TokenConstruct p) }
     "delete"                { (\p s -> TokenDelete p) }
+    "start"                 { (\p s -> TokenStart p) }
     "evaluate"              { (\p s -> TokenEvaluate p) }
     "union"                 { (\p s -> TokenUnion p) }
     "intersection"          { (\p s -> TokenIntersection p) }
@@ -50,14 +49,18 @@ tokens :-
     "#subject"              { (\p s -> TokenSubjectElement p) }
     "#predicate"            { (\p s -> TokenPredicateElement p) }
     "#object"               { (\p s -> TokenObjectElement p) }
-    "transitive_join"       { (\p s -> TokenJoin p) }
+    "save to"               { (\p s -> TokenSaveTo p s) }
+    "and"                   { (\p s -> TokenAnd p) }
+    "or"                    { (\p s -> TokenOr p) }
+    "not"                   { (\p s -> TokenNot p) }
     @branch                 { (\p s -> TokenBranch p s) }
     @filename               { (\p s -> TokenFileName p s) }
     @graphname              { (\p s -> TokenGraphName p s) }
-    @uri                    { (\p s -> TokenLiteral p s) }
     @operands               { (\p s -> TokenArithOperator p s) }
     @comparison             { (\p s -> TokenCompOperator p s) }
     @literal                { (\p s -> TokenLiteral p s) }
+
+
 
 {
 
@@ -77,6 +80,7 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenWith AlexPosn
                 | TokenConstruct AlexPosn
                 | TokenDelete AlexPosn
+                | TokenStart AlexPosn
                 | TokenEvaluate AlexPosn
                 | TokenUnion AlexPosn
                 | TokenIntersection AlexPosn
@@ -115,6 +119,7 @@ tokenPosn (TokenReplace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWith (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenConstruct (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDelete (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenStart (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEvaluate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenIntersection (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

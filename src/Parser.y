@@ -24,6 +24,7 @@ import Lexer
     with                { TokenWith _ }
     construct           { TokenConstruct _ }
     delete              { TokenDelete _ }
+    start               { TokenStart _ }
     evaluate            { TokenEvaluate _ }
     union               { TokenUnion _ }
     intersection        { TokenIntersection _ }
@@ -43,19 +44,18 @@ import Lexer
     save_to             { TokenSaveTo _ $$ }
     literal             { TokenLiteral _ $$ }
 
+%left not
+%nonassoc and or
+
+
 %%
 
 -- Entry Point: Accepts commands with or without 'save_to'
 Line
-    : Query save_to Identifier                 { LSave $1 $3 }
-    | Query                                    { LNoSave $1 }
-    | evaluate Operation     { LEval $2 }
-
--- Unifies all string-like tokens to prevent Lexer mismatch errors
-Identifier
-    : graph_name                               { $1 }
-    | file_name                                { $1 }
-    | literal                                  { $1 }
+    : Query save_to graph_name                 { LSaveQuery $1 $3 }
+    | Query                                    { LNoSaveQuery $1  } 
+    | evaluate Operation save_to file_name     { LEval $2 $4 }
+    | evaluate Operation                       { LNoSaveEval $2} 
 
 Query
     : CombineQuery                             { QCombine $1 }
@@ -138,8 +138,8 @@ GraphOperationSingle
     | max SelectQuery                   { GMax $2 }
 
 FilterStart
-    : Filter and FilterFinal                   { FAnd $1 $3 }
-    | Filter or FilterFinal                    { FOr $1 $3 }
+    : start Filter and start FilterFinal                   { FAnd $2 $5 }
+    | start Filter or start FilterFinal                    { FOr $2 $5 }
     | not Filter                               { FNot $2 }
     | Filter                                   { FBase $1 }
 
@@ -159,9 +159,10 @@ parseError []     = error "Parse error: Unexpected end of input (EOF). Check for
 parseError (t:ts) = error ("Parse error at " ++ (tokenPosn t) ++ " on token: " ++ show t ++ "\nRemaining stream: " ++ show ts)
 
 data Line
-    = LSave Query String
-    | LEval Operation
-    | LNoSave Query
+    = LSaveQuery Query String
+    | LNoSaveQuery Query
+    | LEval Operation String
+    | LNoSaveEval Operation
     deriving (Show, Eq)
 
 data Query
