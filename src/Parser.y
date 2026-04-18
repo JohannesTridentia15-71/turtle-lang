@@ -30,6 +30,7 @@ import Lexer
     difference          { TokenDifference _ }
     min                 { TokenMin _ }
     max                 { TokenMax _ }
+    transitive_join                { TokenJoin _ }
     subject             { TokenSubjectElement _ }
     predicate           { TokenPredicateElement _ }
     object              { TokenObjectElement _ }
@@ -44,9 +45,17 @@ import Lexer
 
 %%
 
+-- Entry Point: Accepts commands with or without 'save_to'
 Line
-    : Query save_to graph_name                 { LSave $1 $3 }
-    | evaluate Operation save_to file_name     { LEval $2 $4 }
+    : Query save_to Identifier                 { LSave $1 $3 }
+    | Query                                    { LNoSave $1 }
+    | evaluate Operation     { LEval $2 }
+
+-- Unifies all string-like tokens to prevent Lexer mismatch errors
+Identifier
+    : graph_name                               { $1 }
+    | file_name                                { $1 }
+    | literal                                  { $1 }
 
 Query
     : CombineQuery                             { QCombine $1 }
@@ -56,76 +65,83 @@ Query
     | DeleteQuery                              { QDelete $1 }
 
 SelectQuery
-    : select_from graph_name                   { SQAll $2 }
-    | select_from graph_name where FilterStart { SQWhere $2 $4 }
+    : select_from Identifier                   { SQAll $2 }
+    | select_from Identifier where FilterStart  { SQWhere $2 $4 }
     | SelectElementQuery                       { SQElement $1 }
 
 SelectEmptyQuery
-    : select_from graph_name                   { SENoElemAll $2 }
-    | select_from graph_name where FilterStart { SENoElemWhere $2 $4 }
+    : select_from Identifier                   { SENoElemAll $2 }
+    | select_from Identifier where FilterStart  { SENoElemWhere $2 $4 }
 
 SelectElementQuery
-    : select Element from graph_name where FilterStart  { SElem $2 $4 $6 }
-    | literal                                  { SELit $1 }
+    : select Element from Identifier where FilterStart  { SElem $2 $4 $6 }
+    | Element                                           { SElemSimple $1 } 
+    | literal                                           { SELit $1 }  
+    | Identifier                                        { SELit $1 } 
 
 Element
     : subject                                  { ESubject }
-    | predicate                                { EPredicate  }
-    | object                                   { EObject  }
+    | predicate                                { EPredicate }
+    | object                                   { EObject }
 
 SelectObjectQuery
-    : select_object from graph_name where FilterStart { SObj $3 $5 }
+    : select_object from Identifier where FilterStart { SObj $3 $5 }
 
 CombineQuery
     : combine CombineQuery SelectQuery         { CCombine $2 $3 }
     | SelectQuery                              { CNested $1 }
 
 AddQuery
-    : add branch to graph_name                 { AddQ $2 $4 }
+    : add branch to Identifier                 { AddQ $2 $4 }
 
 ReplaceQuery
-    : in graph_name replace SelectEmptyQuery with element
-                                              { RqObject $2 $4 $6 }
-    | in graph_name replace SelectEmptyQuery with SelectObjectQuery
-                                              { RqSelectObject $2 $4 $6 }
+    : in Identifier replace SelectEmptyQuery with element
+                                               { RqObject $2 $4 $6 }
+    | in Identifier replace SelectEmptyQuery with SelectObjectQuery
+                                               { RqSelectObject $2 $4 $6 }
 
 ConstructQuery
-    : construct graph_name                     { Cq $2 }
+    : construct Identifier                     { Cq $2 }
 
 DeleteQuery
-    : delete graph_name                        { Dq $2 }
-    | delete graph_name where FilterStart      { DqWhere $2 $4 }
+    : delete Identifier                        { Dq $2 }
+    | delete Identifier where FilterStart      { DqWhere $2 $4 }
 
 Operation
     : ArithmeticOperation                      { OpArith $1 }
     | ComparisonOperation                      { OpComp $1 }
     | GraphOperation                           { OpGraph $1 }
+    | transitive_join Identifier Identifier where JoinFilter { OpJoin $2 $3 $5 }
+
+JoinFilter
+    : Element comp_operand Element { ($1, $2, $3) }
 
 ArithmeticOperation
     : arith_operand SelectElementQuery SelectElementQuery
-                                              { Arith $1 $2 $3 }
+                                               { Arith $1 $2 $3 }
 
 ComparisonOperation
     : comp_operand SelectElementQuery SelectElementQuery
-                                              { Comp $1 $2 $3 }
+                                               { Comp $1 $2 $3 }
 
 GraphOperation
-    : union SelectElementQuery SelectElementQuery
-                                              { GUnion $2 $3 }
-    | intersection SelectElementQuery SelectElementQuery
-                                              { GIntersection $2 $3 }
-    | difference SelectElementQuery SelectElementQuery
-                                              { GDifference $2 $3 }
+    : union SelectQuery SelectQuery
+                                               { GUnion $2 $3 }
+    | intersection SelectQuery SelectQuery
+                                               { GIntersection $2 $3 }
+    | difference SelectQuery SelectQuery
+                                               { GDifference $2 $3 }
     | GraphOperationSingle                     { GSingle $1 }
 
 GraphOperationSingle
-    : min SelectElementQuery                   { GMin $2 }
-    | max SelectElementQuery                   { GMax $2 }
+    : min SelectQuery                   { GMin $2 }
+    | max SelectQuery                   { GMax $2 }
 
 FilterStart
     : Filter and FilterFinal                   { FAnd $1 $3 }
     | Filter or FilterFinal                    { FOr $1 $3 }
     | not Filter                               { FNot $2 }
+    | Filter                                   { FBase $1 }
 
 Filter
     : Filter and FilterFinal                   { FAnd' $1 $3 }
@@ -137,14 +153,15 @@ FilterFinal
     : ComparisonOperation                      { FFinal $1 }
 
 {
+-- Improved Error Handling: shows remaining tokens to help debugging
 parseError :: [TtlToken] -> a
-parseError []     = error "Unknown Parse Error"
-parseError (t:ts) =
-  error ("Parse error at line:column " ++ (tokenPosn t) ++ " : " ++ show ts)
+parseError []     = error "Parse error: Unexpected end of input (EOF). Check for missing parameters or trailing newlines."
+parseError (t:ts) = error ("Parse error at " ++ (tokenPosn t) ++ " on token: " ++ show t ++ "\nRemaining stream: " ++ show ts)
 
 data Line
     = LSave Query String
-    | LEval Operation String
+    | LEval Operation
+    | LNoSave Query
     deriving (Show, Eq)
 
 data Query
@@ -168,6 +185,7 @@ data SelectEmptyQuery
 
 data SelectElementQuery
     = SElem Element String FilterStart
+    | SElemSimple Element
     | SELit String
     deriving (Show, Eq)
 
@@ -208,6 +226,7 @@ data Operation
     = OpArith ArithmeticOperation
     | OpComp ComparisonOperation
     | OpGraph GraphOperation
+    | OpJoin String String (Element, String, Element)
     deriving (Show, Eq)
 
 data ArithmeticOperation
@@ -219,21 +238,22 @@ data ComparisonOperation
     deriving (Show, Eq)
 
 data GraphOperation
-    = GUnion SelectElementQuery SelectElementQuery
-    | GIntersection SelectElementQuery SelectElementQuery
-    | GDifference SelectElementQuery SelectElementQuery
+    = GUnion SelectQuery SelectQuery      
+    | GIntersection SelectQuery SelectQuery
+    | GDifference SelectQuery SelectQuery
     | GSingle GraphOperationSingle
     deriving (Show, Eq)
 
 data GraphOperationSingle
-    = GMin SelectElementQuery
-    | GMax SelectElementQuery
+    = GMin SelectQuery                    
+    | GMax SelectQuery                    
     deriving (Show, Eq)
 
 data FilterStart
     = FAnd Filter FilterFinal
     | FOr  Filter FilterFinal
     | FNot Filter
+    | FBase Filter
     deriving (Show, Eq)
 
 data Filter

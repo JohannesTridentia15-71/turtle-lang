@@ -1,0 +1,7 @@
+@prefix ex: <http://example.org/ont/> .
+
+ex:Alice ex:hasAge 25 .
+ex:Bob ex:hasAge 19 .
+ex:Charlie ex:hasAge 21 .
+ex:Alice ex:name "Alice" .
+ex:Alice ex:anotherNumber 30 .

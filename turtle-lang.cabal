@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.39.1.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -27,6 +27,8 @@ library
   exposed-modules:
       Lexer
       Lib
+      Main
+      Normalise
       Parser
   other-modules:
       Paths_turtle_lang
@@ -41,6 +43,7 @@ library
   build-depends:
       array
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 executable turtle-lang-exe
@@ -58,6 +61,7 @@ executable turtle-lang-exe
   build-depends:
       array
     , base >=4.7 && <5
+    , containers
     , turtle-lang
   default-language: Haskell2010
 
@@ -74,5 +78,6 @@ test-suite turtle-lang-test
   build-depends:
       array
     , base >=4.7 && <5
+    , containers
     , turtle-lang
   default-language: Haskell2010

@@ -1,0 +1,8 @@
+@prefix ex: <http://example.org/ont/> .
+@prefix inst: <http://example.org/> .
+
+inst:Alice ex:studiesAt inst:uos .
+inst:Bob ex:worksFor inst:uos .
+inst:Charlie ex:studiesAt inst:otherUniversity .
+inst:David ex:friendOf inst:Alice .
+inst:Eve ex:livesIn inst:uos .

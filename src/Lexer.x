@@ -11,7 +11,7 @@ $special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 -- note that this is a very loose, non-binding definition of the uri syntax, but it should be sufficient for our purposes
 -- the RFC 3986 definition is much too complicated. 
 -- it could accept some invalid URIs, this might be a weakpoint in the future.
-@uri = [A-Za-z0-9$special]+
+@uri = "<" [^>]* ">"
 @ttl = \.ttl
 @filename = [a-z][a-zA-Z0-9\-_]*@ttl
 @graphname = @filename
@@ -19,15 +19,16 @@ $special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 @element = @uri | @literal
 @branch = \< @uri \>\< @uri \>\< @element \>
 @operands = \+|\*|\-|\\
-@comparison = \=|!\=|\<|\>|\<\=|\>\=
+@comparison = ==|\=|!\=|\<|\>|\<\=|\>\=
 
 tokens :-
 
     $white+                 ; 
-    "select"                { (\p s -> TokenSelect p) }
-    "select from"           { (\p s -> TokenSelectFrom p) }
-    "where"                 { (\p s -> TokenWhere p) }
+    "select_from"           { (\p s -> TokenSelectFrom p) }
     "select #object"        { (\p s -> TokenSelectObject p) }
+    "save to"               { (\p s -> TokenSaveTo p s) } 
+    "select"                { (\p s -> TokenSelect p) }
+    "where"                 { (\p s -> TokenWhere p) }
     "from"                  { (\p s -> TokenFrom p) }
     "combine"               { (\p s -> TokenCombine p) }
     "add"                   { (\p s -> TokenAdd p) }
@@ -43,21 +44,20 @@ tokens :-
     "difference"            { (\p s -> TokenDifference p) }
     "min"                   { (\p s -> TokenMin p) }
     "max"                   { (\p s -> TokenMax p) }
-    "#subject"              { (\p s -> TokenSubjectElement p) }
-    "#predicate"            { (\p s -> TokenPredicateElement p) }
-    "#object"               { (\p s -> TokenObjectElement p) }
-    "save to"               { (\p s -> TokenSaveTo p (read s)) }
     "and"                   { (\p s -> TokenAnd p) }
     "or"                    { (\p s -> TokenOr p) }
     "not"                   { (\p s -> TokenNot p) }
-    @branch                 { (\p s -> TokenBranch p (read s)) }
-    @filename               { (\p s -> TokenFileName p (read s)) }
-    @graphname              { (\p s -> TokenGraphName p (read s)) }
-    @operands               { (\p s -> TokenArithOperator p (read s)) }
-    @comparison             { (\p s -> TokenCompOperator p (read s)) }
-    @literal                { (\p s -> TokenLiteral p (read s)) }
-
-
+    "#subject"              { (\p s -> TokenSubjectElement p) }
+    "#predicate"            { (\p s -> TokenPredicateElement p) }
+    "#object"               { (\p s -> TokenObjectElement p) }
+    "transitive_join"       { (\p s -> TokenJoin p) }
+    @branch                 { (\p s -> TokenBranch p s) }
+    @filename               { (\p s -> TokenFileName p s) }
+    @graphname              { (\p s -> TokenGraphName p s) }
+    @uri                    { (\p s -> TokenLiteral p s) }
+    @operands               { (\p s -> TokenArithOperator p s) }
+    @comparison             { (\p s -> TokenCompOperator p s) }
+    @literal                { (\p s -> TokenLiteral p s) }
 
 {
 
@@ -94,6 +94,7 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenArithOperator AlexPosn String
                 | TokenCompOperator AlexPosn String
                 | TokenSaveTo AlexPosn String
+                | TokenJoin AlexPosn
                 deriving (Show, Eq)
 
 --useful for error reporting, to get the position of the token that caused the error
@@ -131,4 +132,5 @@ tokenPosn (TokenElement (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenArithOperator (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenCompOperator (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSaveTo (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }
