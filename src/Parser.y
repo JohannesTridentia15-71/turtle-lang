@@ -50,8 +50,10 @@ import Lexer
 %%
 
 Line
-    : Query save_to graph_name                 { LSave $1 $3 }
+    : Query save_to graph_name                 { LSaveQuery $1 $3 }
+    | Query                                    { LNoSaveQuery $1  } 
     | evaluate Operation save_to file_name     { LEval $2 $4 }
+    | evaluate Operation                       { LNoSaveEval $2} 
 
 Query
     : CombineQuery                             { QCombine $1 }
@@ -148,8 +150,10 @@ parseError (t:ts) =
   error ("Parse error at line:column " ++ (tokenPosn t) ++ " : " ++ show ts)
 
 data Line
-    = LSave Query String
+    = LSaveQuery Query String
+    | LNoSaveQuery Query
     | LEval Operation String
+    | LNoSaveEval Operation
     deriving (Show, Eq)
 
 data Query

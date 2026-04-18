@@ -12,7 +12,7 @@ $special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 -- the RFC 3986 definition is much too complicated. 
 -- it could accept some invalid URIs, this might be a weakpoint in the future.
 @uri = [A-Za-z0-9$special\:]+
-@graphname = [a-z][a-zA-Z0-9\-_]*
+@graphname = [a-z][a-zA-Z0-9\-_]*.ttl
 @filename = [a-zA-Z0-9\-_]+\.ttl
 -- defined as to avoid repettion in the branch rule
 @element = @uri | @literal
