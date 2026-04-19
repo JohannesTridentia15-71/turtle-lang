@@ -43,6 +43,7 @@ import Lexer
     comp_operand        { TokenCompOperator _ $$ }
     save_to             { TokenSaveTo _ $$ }
     literal             { TokenLiteral _ $$ }
+    uri_ref             { TokenURIRef _ $$ }
 
 %left not
 %nonassoc and or
@@ -77,6 +78,7 @@ SelectElementQuery
     : select Element from Identifier where FilterStart  { SElem $2 $4 $6 }
     | Element                                           { SElemSimple $1 } 
     | literal                                           { SELit $1 }  
+    | uri_ref                                           { SELit $1 }
     | Identifier                                        { SELit $1 } 
 
 Element
@@ -88,6 +90,7 @@ Identifier
     : graph_name                               { $1 }
     | file_name                                { $1 }
     | literal                                  { $1 }
+    | uri_ref                                  { $1 }
 
 SelectObjectQuery
     : select_object from Identifier where FilterStart { SObj $3 $5 }
@@ -97,7 +100,10 @@ CombineQuery
     | SelectQuery                              { CNested $1 }
 
 AddQuery
-    : add branch to Identifier                 { AddQ $2 $4 }
+    : add branch to Identifier                            { AddQ $2 $4 }
+    | add uri_ref uri_ref uri_ref to Identifier           { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) $6 }
+    | add uri_ref uri_ref literal to Identifier           { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) $6 }
+    | add uri_ref uri_ref uri_ref to graph_name           { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) $6 }
 
 ReplaceQuery
     : in Identifier replace SelectEmptyQuery with element

@@ -27,6 +27,17 @@ import Debug.Trace (traceShow)
 
 type GraphState = Map.Map String [(String, String, String)]
 
+inputFiles :: [TtlToken] -> [String]
+inputFiles [] = []
+inputFiles (TokenSaveTo _ _ : TokenFileName _ _ : rest) = inputFiles rest
+inputFiles (TokenSaveTo _ _ : TokenGraphName _ _ : rest) = inputFiles rest
+inputFiles (TokenFileName _ s : rest) = s : inputFiles rest
+inputFiles (TokenGraphName _ s : rest) = s : inputFiles rest
+inputFiles (TokenLiteral _ s : rest)
+    | ".ttl" `isSuffixOf` s = s : inputFiles rest
+    | otherwise             = inputFiles rest
+inputFiles (_ : rest) = inputFiles rest
+
 -- Currently this code contains everything - over the next few days I will split into separate files to improve codestyle and readability
 -- Correct as of 19/04/2025 - mag1g24
 
@@ -39,7 +50,7 @@ main = do
             let tokens = alexScanTokens input
             let ast = parseTTL tokens
 
-            let ttlFiles = [s | TokenFileName _ s <- tokens] ++ [s | TokenLiteral _ s <- tokens, ".ttl" `isSuffixOf` s]
+            let ttlFiles = inputFiles tokens
 
             initialState <- do
                 let uniqueFiles = nub ttlFiles
@@ -87,39 +98,36 @@ evaluate (LNoSaveEval operation) state = do
     return state
 
 
-evalMax :: String -> GraphState -> [(String, String, String)]
-evalMax fileName state =
-    let triples = Map.findWithDefault [] fileName state
-        sorted = sortBy (comparing (\(s, p, _) -> (s, p))) triples
-        groups = groupBy (\(s1, p1, _) (s2, p2, _) -> s1 == s2 && p1 == p2) sorted
-        
-    in map findMaxInGroup groups
+extractNumeric :: String -> Double
+extractNumeric s =
+    let cleaned = filter (\c -> isDigit c || c == '.' || c == '-') s
+    in case readMaybe cleaned :: Maybe Double of
+         Just n  -> n
+         Nothing -> 0.0
 
 findMaxInGroup :: [(String, String, String)] -> (String, String, String)
 findMaxInGroup = maximumBy (comparing (extractNumeric . (\(_, _, o) -> o)))
-  where
-    extractNumeric s = 
-        let cleaned = filter (\c -> isDigit c || c == '.' || c == '-') s
-        in case readMaybe cleaned :: Maybe Double of
-             Just n  -> n
-             Nothing -> 0.0 
-
-evalMin :: String -> GraphState -> [(String, String, String)]
-evalMin fileName state =
-    let triples = Map.findWithDefault [] fileName state
-        sorted = sortBy (comparing (\(s, p, _) -> (s, p))) triples
-        groups = groupBy (\(s1, p1, _) (s2, p2, _) -> s1 == s2 && p1 == p2) sorted
-        
-    in map findMinInGroup groups
 
 findMinInGroup :: [(String, String, String)] -> (String, String, String)
 findMinInGroup = minimumBy (comparing (extractNumeric . (\(_, _, o) -> o)))
-  where
-    extractNumeric s = 
-        let cleaned = filter (\c -> isDigit c || c == '.' || c == '-') s
-        in case readMaybe cleaned :: Maybe Double of
-             Just n  -> n
-             Nothing -> 0.0 
+
+evalMaxTriples :: [(String, String, String)] -> [(String, String, String)]
+evalMaxTriples triples =
+    let sorted = sortBy (comparing (\(s, p, _) -> (s, p))) triples
+        groups = groupBy (\(s1, p1, _) (s2, p2, _) -> s1 == s2 && p1 == p2) sorted
+    in map findMaxInGroup groups
+
+evalMinTriples :: [(String, String, String)] -> [(String, String, String)]
+evalMinTriples triples =
+    let sorted = sortBy (comparing (\(s, p, _) -> (s, p))) triples
+        groups = groupBy (\(s1, p1, _) (s2, p2, _) -> s1 == s2 && p1 == p2) sorted
+    in map findMinInGroup groups
+
+evalMax :: String -> GraphState -> [(String, String, String)]
+evalMax fileName state = evalMaxTriples (Map.findWithDefault [] fileName state)
+
+evalMin :: String -> GraphState -> [(String, String, String)]
+evalMin fileName state = evalMinTriples (Map.findWithDefault [] fileName state)
 
 
 evalQuery :: Query -> GraphState -> [(String, String, String)]
@@ -138,12 +146,25 @@ evalDelete (DqWhere name fStart) state =
 
 -- Add Case
 evalAdd :: AddQuery -> GraphState -> [(String, String, String)]
+
+parseBranchStr :: String -> [String]
+parseBranchStr s
+    | ' ' `elem` s = splitTokens s
+    | otherwise    = go s
+  where
+    go "" = []
+    go ('<':xs) = let (u, rest) = break (== '>') xs
+                  in ('<':u++">") : go (drop 1 rest)
+    go ('"':xs) = let (q, rest) = break (== '"') xs
+                  in ('"':q++"\"") : go (drop 1 rest)
+    go xs       = let (w, rest) = break (\c -> c == '<' || c == '"') xs
+                  in [w | not (null w)] ++ go rest
+
 evalAdd (AddQ branchStr name) state =
-    let g = Map.findWithDefault [] name state
-        clean = tail (init branchStr) 
-        tokens = splitTokens clean
-    in if length tokens >= 3 
-       then (tokens !! 0, tokens !! 1, tokens !! 2) : g
+    let g      = Map.findWithDefault [] name state
+        parts  = parseBranchStr branchStr
+    in if length parts >= 3
+       then (parts !! 0, parts !! 1, parts !! 2) : g
        else g
 
 -- Combine Case
@@ -227,14 +248,10 @@ evalGraphOp op state = case op of
             g2 = getGraphBySel sel2 state
         in serializeGraph [t | t <- g1, not (t `elem` g2)]
 
-    GSingle (GMax (SQAll f)) -> serializeGraph (evalMax f state)
-    
-    GSingle (GMin (SQAll f)) -> serializeGraph (evalMin f state)
- 
-    GSingle (GMax (SQElement sel)) -> 
-        let values = getAllValues sel state
-        in if null values then "Empty" else maximum values
-    
+    GSingle (GMax sq) -> serializeGraph (evalMaxTriples (getGraphBySel sq state))
+
+    GSingle (GMin sq) -> serializeGraph (evalMinTriples (getGraphBySel sq state))
+
     _ -> "Operation Result"
 
 -- Helper for min/max - get all values 
@@ -332,7 +349,7 @@ splitTokens (x:xs)
                   in word : splitTokens rest
 
 serializeGraph :: [(String, String, String)] -> String
-serializeGraph triples = unlines [s ++ " " ++ p ++ " " ++ o ++ " ." | (s, p, o) <- triples]
+serializeGraph triples = unlines [s ++ " " ++ p ++ " " ++ o ++ " ." | (s, p, o) <- sortBy compare (nub triples)]
 
 updateTriple :: (String, String, String) -> String -> (String, String, String)
 updateTriple (s, p, o) newVal

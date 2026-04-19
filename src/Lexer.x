@@ -17,6 +17,7 @@ $special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 -- defined as to avoid repettion in the branch rule
 @element = @uri | @literal
 @branch = \<@uri\>\<@uri\>\<@element\>
+@uri_ref = \<@uri\>
 @operands = \+|\*|\-|\\
 @comparison = \=|\!\=|\<|\>|\<\=|\>\=
 
@@ -54,6 +55,7 @@ tokens :-
     "#object"               { (\p s -> TokenObjectElement p) }
     "save to"               { (\p s -> TokenSaveTo p s) }
     @branch                 { (\p s -> TokenBranch p s) }
+    @uri_ref                { (\p s -> TokenURIRef p s) }
     @filename               { (\p s -> TokenFileName p s) }
     @graphname              { (\p s -> TokenGraphName p s) }
     @operands               { (\p s -> TokenArithOperator p s) }
@@ -99,6 +101,7 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenCompOperator AlexPosn String
                 | TokenSaveTo AlexPosn String
                 | TokenJoin AlexPosn
+                | TokenURIRef AlexPosn String
                 deriving (Show, Eq)
 
 --useful for error reporting, to get the position of the token that caused the error
@@ -138,4 +141,5 @@ tokenPosn (TokenArithOperator (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenCompOperator (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSaveTo (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenURIRef (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 }
