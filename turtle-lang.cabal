@@ -25,9 +25,9 @@ source-repository head
 
 library
   exposed-modules:
+      Interpreter
       Lexer
       Lib
-      Main
       Normalise
       Parser
   other-modules:
@@ -76,7 +76,8 @@ test-suite turtle-lang-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      array
+      HUnit
+    , array
     , base >=4.7 && <5
     , containers
     , turtle-lang

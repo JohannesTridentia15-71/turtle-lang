@@ -25,6 +25,9 @@ tokens :-
     $white+                 ; 
     \(                      ;
     \)                      ;
+    "select from"           { (\p s -> TokenSelectFrom p) }
+    "select object"         { (\p s -> TokenSelectObject p) }
+    "transitive_join"       { (\p s -> TokenJoin p) }
     "select"                { (\p s -> TokenSelect p) }
     "where"                 { (\p s -> TokenWhere p) }
     "from"                  { (\p s -> TokenFrom p) }
@@ -50,9 +53,6 @@ tokens :-
     "#predicate"            { (\p s -> TokenPredicateElement p) }
     "#object"               { (\p s -> TokenObjectElement p) }
     "save to"               { (\p s -> TokenSaveTo p s) }
-    "and"                   { (\p s -> TokenAnd p) }
-    "or"                    { (\p s -> TokenOr p) }
-    "not"                   { (\p s -> TokenNot p) }
     @branch                 { (\p s -> TokenBranch p s) }
     @filename               { (\p s -> TokenFileName p s) }
     @graphname              { (\p s -> TokenGraphName p s) }

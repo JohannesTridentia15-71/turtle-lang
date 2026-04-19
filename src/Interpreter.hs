@@ -1,8 +1,19 @@
-module Main where
+module Interpreter
+    ( main
+    , GraphState
+    , evaluate
+    , evalQuery
+    , evalSelect
+    , evalCombine
+    , evalFilterStart
+    , parseTurtleFile
+    , serializeGraph
+    , splitTokens
+    ) where
 
 import Lexer
 import Parser
-import Normalise
+import Normalise (normaliseTTL)
 import System.Environment (getArgs)
 import qualified Data.Map as Map -- used for findWithDefault to avoid errors 
 import Data.List (isPrefixOf)
@@ -24,12 +35,12 @@ main = do
     args <- getArgs
     case args of
         [file] -> do
-            input <- readFile file 
+            input <- readFile file
             let tokens = alexScanTokens input
             let ast = parseTTL tokens
-            
+
             let ttlFiles = [s | TokenFileName _ s <- tokens] ++ [s | TokenLiteral _ s <- tokens, ".ttl" `isSuffixOf` s]
-            
+
             initialState <- do
                 let uniqueFiles = nub ttlFiles
                 fileContents <- mapM (\f -> do
@@ -38,37 +49,41 @@ main = do
                     return (f, parseTurtleFile clean)
                     ) uniqueFiles
                 return $ Map.fromList fileContents
-            -- if there is no filename left to parse
             _ <- evaluate ast initialState
             return ()
-        -- If the command is not executed correctly
-        _ -> putStrLn "Usage: stack exec -- ttl-tool <filename>"
+        _ -> putStrLn "Usage: stack exec turtle-lang-exe -- <filename>"
 
 -- entry point: evaluate all statements from here
 evaluate :: Line -> GraphState -> IO GraphState
-execute (LSave query targetName) state = do
+evaluate (LSaveQuery query targetName) state = do
     let newTriples = evalQuery query state
-    -- Here is where the GraphState actually changes
     let newState = Map.insert targetName newTriples state
     writeFile targetName (serializeGraph newTriples)
     return newState
 
-evaluate (LNoSave query) state = do
+evaluate (LNoSaveQuery query) state = do
     let result = evalQuery query state
     putStr (serializeGraph result)
     return state
 
-evaluate (LEval (OpJoin g1 g2 cond)) state = do
+evaluate (LEval (OpJoin g1 g2 cond) fname) state = do
+    let result = evalJoin g1 g2 cond state
+    writeFile fname (serializeGraph result)
+    return (Map.insert fname result state)
+
+evaluate (LEval operation fname) state = do
+    let result = evalOperation operation state
+    writeFile fname result
+    return state
+
+evaluate (LNoSaveEval (OpJoin g1 g2 cond)) state = do
     let result = evalJoin g1 g2 cond state
     putStr (serializeGraph result)
     return state
 
-evaluate (LEval operation) state = do
-    let resultTriples = case operation of
-                          OpGraph (GSingle (GMax (SQAll f))) -> evalMax f state
-                          OpGraph (GSingle (GMin (SQAll f))) -> evalMin f state -- If implemented
-                          _ -> [] 
-    putStr (serializeGraph resultTriples)
+evaluate (LNoSaveEval operation) state = do
+    let result = evalOperation operation state
+    putStrLn result
     return state
 
 
@@ -177,6 +192,7 @@ evalOperation (OpComp comp) state =
     if evalComparison comp ("", "", "") state then "True" else "False"
 
 evalOperation (OpGraph gOp) state = evalGraphOp gOp state
+evalOperation (OpJoin g1 g2 cond) state = serializeGraph (evalJoin g1 g2 cond state)
 
 -- Transitive Join Logic (only works for #type and #subClassOf - might need to be changed?)
 evalJoin :: String -> String -> (Element, String, Element) -> GraphState -> [(String, String, String)]
@@ -259,6 +275,7 @@ evalComparison (Comp op sel1 sel2) triple state =
         val2 = evalSelectElement sel2 triple state
     in if all isDigit val1 && all isDigit val2 && not (null val1 || null val2)
        then case op of
+           "=" -> (read val1 :: Int) == (read val2)
            "==" -> (read val1 :: Int) == (read val2)
            ">=" -> (read val1 :: Int) >= (read val2)
            "<=" -> (read val1 :: Int) <= (read val2)
@@ -266,6 +283,7 @@ evalComparison (Comp op sel1 sel2) triple state =
            "<"  -> (read val1 :: Int) <  (read val2)
            _    -> False
        else case op of
+           "=" -> val1 == val2
            "==" -> val1 == val2
            "!=" -> val1 /= val2
            _    -> False

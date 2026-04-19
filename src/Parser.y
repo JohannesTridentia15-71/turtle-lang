@@ -52,7 +52,7 @@ import Lexer
 
 -- Entry Point: Accepts commands with or without 'save_to'
 Line
-    : Query save_to graph_name                 { LSaveQuery $1 $3 }
+    : Query save_to Identifier                 { LSaveQuery $1 $3 }
     | Query                                    { LNoSaveQuery $1  } 
     | evaluate Operation save_to file_name     { LEval $2 $4 }
     | evaluate Operation                       { LNoSaveEval $2} 
@@ -83,6 +83,11 @@ Element
     : subject                                  { ESubject }
     | predicate                                { EPredicate }
     | object                                   { EObject }
+
+Identifier
+    : graph_name                               { $1 }
+    | file_name                                { $1 }
+    | literal                                  { $1 }
 
 SelectObjectQuery
     : select_object from Identifier where FilterStart { SObj $3 $5 }
