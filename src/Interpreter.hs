@@ -94,7 +94,7 @@ evaluate (LNoSaveEval (OpJoin g1 g2 cond)) state = do
 
 evaluate (LNoSaveEval operation) state = do
     let result = evalOperation operation state
-    putStrLn result
+    putStr result
     return state
 
 

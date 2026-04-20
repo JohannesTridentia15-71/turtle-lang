@@ -109,13 +109,14 @@ isRelativeIri xs =
 expandCommas :: String -> [String]
 expandCommas input =
     let
-        ws = words (filter (`notElem` ".;") input)
+        ws    = words (filter (`notElem` ".;") input)
+        rawWs = filter (`notElem` [".", ";"]) (words input)
     in if "," `notElem` ws
-       then [input] 
-       else 
-           let subj = ws !! 0
-               pred = ws !! 1
-               objs = splitByComma (drop 2 ws)
+       then [input]
+       else
+           let subj = rawWs !! 0
+               pred = rawWs !! 1
+               objs = splitByComma (drop 2 rawWs)
            in map (\obj -> unwords [subj, pred, obj, "."]) objs
 
 
