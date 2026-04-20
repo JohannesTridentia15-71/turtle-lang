@@ -1,0 +1,5 @@
+<http://example.org/Alice> <http://example.org/ont/livesIn> "London" .
+<http://example.org/Alice> <http://example.org/ont/worksFor> <http://example.org/CompanyA> .
+<http://example.org/Bob> <http://example.org/ont/livesIn> "Paris" .
+<http://example.org/Bob> <http://example.org/ont/worksFor> <http://example.org/CompanyA> .
+<http://example.org/CompanyA> <http://example.org/ont/locatedIn> "United Kingdom" .

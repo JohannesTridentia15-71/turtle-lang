@@ -1,0 +1,8 @@
+@prefix ex: <http://example.org/ont/> .
+@prefix inst: <http://example.org/> .
+
+inst:Alice ex:hasAge 9 .
+inst:Bob ex:hasAge 100 .
+inst:Charlie ex:hasAge 21 .
+inst:Dave ex:name "Dave" .
+inst:Eve ex:hasAge 20 .

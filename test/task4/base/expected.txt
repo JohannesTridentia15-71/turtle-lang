@@ -1,0 +1,2 @@
+<http://example.org/ItemA> <http://example.org/ont/price> 99 .
+<http://example.org/ItemB> <http://example.org/ont/price> 8 .

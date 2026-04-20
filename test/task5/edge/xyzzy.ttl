@@ -1,0 +1,7 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ex: <http://example.org/> .
+
+ex:Alice rdf:type ex:Student ;
+         rdf:type ex:Employee .
+ex:Bob rdf:type ex:Student .
+ex:Charlie rdf:type ex:Unknown .

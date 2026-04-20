@@ -1,0 +1,1 @@
+combine select from foo.ttl select from bar.ttl

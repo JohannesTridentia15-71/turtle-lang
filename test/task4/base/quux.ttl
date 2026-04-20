@@ -1,0 +1,5 @@
+<http://example.org/ItemA> <http://example.org/ont/price> 10 .
+<http://example.org/ItemA> <http://example.org/ont/price> 99 .
+<http://example.org/ItemA> <http://example.org/ont/price> 45 .
+<http://example.org/ItemB> <http://example.org/ont/price> 7 .
+<http://example.org/ItemB> <http://example.org/ont/price> 8 .

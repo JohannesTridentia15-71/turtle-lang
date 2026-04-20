@@ -1,0 +1,1 @@
+combine select from qux.ttl where = #predicate <http://example.org/ont/studiesAt> and = #object <http://example.org/uos> select from qux.ttl where = #predicate <http://example.org/ont/worksFor> and = #object <http://example.org/uos>

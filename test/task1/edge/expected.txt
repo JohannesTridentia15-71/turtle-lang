@@ -1,0 +1,4 @@
+<http://bar.example.org/alice> <http://bar.example.org/ont/age> 30 .
+<http://bar.example.org/alice> <http://bar.example.org/ont/knows> <http://bar.example.org/carol> .
+<http://foo.example.org/alice> <http://foo.example.org/ont/age> 30 .
+<http://foo.example.org/alice> <http://foo.example.org/ont/knows> <http://foo.example.org/bob> .

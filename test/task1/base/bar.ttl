@@ -1,0 +1,2 @@
+<http://example.org/Carol> <http://example.org/ont/knows> <http://example.org/Dave> .
+<http://example.org/Carol> <http://example.org/ont/age> 25 .

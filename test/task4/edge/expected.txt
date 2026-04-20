@@ -1,0 +1,4 @@
+<http://example.org/ItemA> <http://example.org/ont/price> 99 .
+<http://example.org/ItemB> <http://example.org/ont/price> 8 .
+<http://example.org/ItemC> <http://example.org/ont/name> "Widget" .
+<http://example.org/ItemC> <http://example.org/ont/price> 5 .

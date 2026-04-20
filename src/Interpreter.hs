@@ -349,7 +349,21 @@ splitTokens (x:xs)
                   in word : splitTokens rest
 
 serializeGraph :: [(String, String, String)] -> String
-serializeGraph triples = unlines [s ++ " " ++ p ++ " " ++ o ++ " ." | (s, p, o) <- sortBy compare (nub triples)]
+serializeGraph triples = unlines [s ++ " " ++ p ++ " " ++ o ++ " ." | (s, p, o) <- sortBy compareTriples (nub triples)]
+
+compareTriples :: (String, String, String) -> (String, String, String) -> Ordering
+compareTriples (s1, p1, o1) (s2, p2, o2) =
+    case compareTokens s1 s2 of
+        EQ -> case compareTokens p1 p2 of
+            EQ -> compareTokens o1 o2
+            c  -> c
+        c  -> c
+
+compareTokens :: String -> String -> Ordering
+compareTokens a b
+    | isInt a && isInt b = compare (read a :: Int) (read b :: Int)
+    | otherwise          = compare a b
+  where isInt s = not (null s) && all isDigit s
 
 updateTriple :: (String, String, String) -> String -> (String, String, String)
 updateTriple (s, p, o) newVal

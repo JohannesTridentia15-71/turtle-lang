@@ -1,0 +1,6 @@
+@base <http://example.org/> .
+@prefix ont: <http://example.org/ont/> .
+
+<Alice> ont:worksFor <CompanyA> .
+<Alice> ont:livesIn "London" .
+<CompanyA> ont:locatedIn "United Kingdom" .

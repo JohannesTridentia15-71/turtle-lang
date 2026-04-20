@@ -1,0 +1,8 @@
+@prefix ont: <http://example.org/ont/> .
+@prefix inst: <http://example.org/> .
+
+inst:ItemA ont:price 10 , 99 , 45 .
+inst:ItemB ont:price 7 ;
+           ont:price 8 .
+inst:ItemC ont:price 5 ;
+           ont:name "Widget" .

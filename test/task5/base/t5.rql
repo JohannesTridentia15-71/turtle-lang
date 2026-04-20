@@ -1,0 +1,1 @@
+evaluate transitive_join xyzzy.ttl plugh.ttl where #subject = #object

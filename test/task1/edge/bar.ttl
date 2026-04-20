@@ -1,0 +1,5 @@
+@base <http://bar.example.org/> .
+@prefix p: <http://bar.example.org/ont/> .
+
+<alice> p:knows <carol> .
+<alice> p:age 30 .
