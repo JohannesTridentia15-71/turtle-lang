@@ -2,12 +2,58 @@ module Normalise where
 import Data.List (isPrefixOf, isSuffixOf)
 
 normaliseTTL :: String -> [String]
-normaliseTTL input = 
-    let allLines = lines input
+normaliseTTL input =
+    let allLines    = lines input
         abbrevLines = filter (\l -> not (null l) && head l == '@') allLines
         triples     = filter (\l -> not (null l) && head l /= '@') allLines
         expanded    = expandLines abbrevLines triples
-    in concatMap expandCommas expanded 
+        joined      = joinContinuations expanded
+    in concatMap expandCommas (concatMap expandSemicolons joined)
+
+joinContinuations :: [String] -> [String]
+joinContinuations [] = []
+joinContinuations (l:ls)
+    | endsWithSemi l = case ls of
+        []          -> [l]
+        (next:rest) -> joinContinuations ((l ++ " " ++ next) : rest)
+    | otherwise = l : joinContinuations ls
+
+endsWithSemi :: String -> Bool
+endsWithSemi s =
+    let toks = tokeniseLine s
+    in not (null toks) && last toks == ";"
+
+tokeniseLine :: String -> [String]
+tokeniseLine "" = []
+tokeniseLine (x:xs)
+    | x == ' '  = tokeniseLine xs
+    | x == '"'  = let (quoted, rest) = break (== '"') xs
+                  in ('"' : quoted ++ "\"") : tokeniseLine (drop 1 rest)
+    | otherwise = let (word, rest) = break (\c -> c == ' ' || c == '"') (x:xs)
+                  in word : tokeniseLine rest
+
+expandSemicolons :: String -> [String]
+expandSemicolons input =
+    let toks = tokeniseLine input
+    in if ";" `notElem` toks
+       then [input]
+       else
+           let toks' = filter (/= ".") toks
+           in case toks' of
+               (subj:rest) ->
+                   let groups = splitBySemi rest
+                   in concatMap (\grp -> case grp of
+                       [] -> []
+                       _  -> [unwords ([subj] ++ grp ++ ["."])]) groups
+               _ -> [input]
+
+splitBySemi :: [String] -> [[String]]
+splitBySemi [] = []
+splitBySemi xs =
+    let (grp, rest) = break (== ";") xs
+    in grp : case rest of
+        []       -> []
+        (_:next) -> splitBySemi next
 
 expandLines :: [String] -> [String] -> [String]
 expandLines [] triples = triples
@@ -62,8 +108,8 @@ isRelativeIri xs =
 
 expandCommas :: String -> [String]
 expandCommas input =
-    let 
-        ws = words (filter (`notElem` ".;") input) 
+    let
+        ws = words (filter (`notElem` ".;") input)
     in if "," `notElem` ws
        then [input] 
        else 
