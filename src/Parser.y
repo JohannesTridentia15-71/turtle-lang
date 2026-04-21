@@ -31,7 +31,8 @@ import Lexer
     difference          { TokenDifference _ }
     min                 { TokenMin _ }
     max                 { TokenMax _ }
-    transitive_join                { TokenJoin _ }
+    count               { TokenCount _ }
+    transitive_join     { TokenJoin _ }
     subject             { TokenSubjectElement _ }
     predicate           { TokenPredicateElement _ }
     object              { TokenObjectElement _ }
@@ -147,6 +148,7 @@ GraphOperation
 GraphOperationSingle
     : min SelectQuery                   { GMin $2 }
     | max SelectQuery                   { GMax $2 }
+    | count SelectQuery                 { GCount $2 }
 
 FilterStart
     : start Filter and start FilterFinal                   { FAnd $2 $5 }
@@ -258,7 +260,8 @@ data GraphOperation
 
 data GraphOperationSingle
     = GMin SelectQuery                    
-    | GMax SelectQuery                    
+    | GMax SelectQuery 
+    | GCount SelectQuery                   
     deriving (Show, Eq)
 
 data FilterStart

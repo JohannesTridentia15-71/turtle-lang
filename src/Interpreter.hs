@@ -129,6 +129,10 @@ evalMax fileName state = evalMaxTriples (Map.findWithDefault [] fileName state)
 evalMin :: String -> GraphState -> [(String, String, String)]
 evalMin fileName state = evalMinTriples (Map.findWithDefault [] fileName state)
 
+count :: [(String, String, String)] -> Integer
+count [] = 0
+count (x:xs) = 1 + count xs
+
 
 evalQuery :: Query -> GraphState -> [(String, String, String)]
 evalQuery (QDelete dq)    state = evalDelete dq state
@@ -252,6 +256,9 @@ evalGraphOp op state = case op of
 
     GSingle (GMin sq) -> serializeGraph (evalMinTriples (getGraphBySel sq state))
 
+    GSingle (GCount sq) -> show (count (getGraphBySel sq state))
+
+
     _ -> "Operation Result"
 
 -- Helper for min/max - get all values 
@@ -370,3 +377,4 @@ updateTriple (s, p, o) newVal
     | "#subject"   `isPrefixOf` newVal = (newVal, p, o)
     | "#predicate" `isPrefixOf` newVal = (s, newVal, o)
     | otherwise                        = (s, p, newVal)
+
