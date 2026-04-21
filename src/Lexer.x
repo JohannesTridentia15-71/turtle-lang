@@ -19,14 +19,14 @@ $special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 @branch = \<@uri\>\<@uri\>\<@element\>
 @uri_ref = \<@uri\>
 @operands = \+|\*|\-|\\
-@comparison = \=|\!\=|\<|\>|\<\=|\>\=
+@comparison = ==|\=|!\=|\<|\>|\<\=|\>\=
 
 tokens :-
 
     $white+                 ; 
     \(                      ;
     \)                      ;
-    "select from"           { (\p s -> TokenSelectFrom p) }
+    "select_from"           { (\p s -> TokenSelectFrom p) }
     "select object"         { (\p s -> TokenSelectObject p) }
     "transitive_join"       { (\p s -> TokenJoin p) }
     "select"                { (\p s -> TokenSelect p) }
@@ -47,13 +47,14 @@ tokens :-
     "difference"            { (\p s -> TokenDifference p) }
     "min"                   { (\p s -> TokenMin p) }
     "max"                   { (\p s -> TokenMax p) }
+    "count"                 { (\p s -> TokenCount p) }
     "and"                   { (\p s -> TokenAnd p) }
     "or"                    { (\p s -> TokenOr p) }
     "not"                   { (\p s -> TokenNot p) }
     "#subject"              { (\p s -> TokenSubjectElement p) }
     "#predicate"            { (\p s -> TokenPredicateElement p) }
     "#object"               { (\p s -> TokenObjectElement p) }
-    "save to"               { (\p s -> TokenSaveTo p s) }
+    "save_to"               { (\p s -> TokenSaveTo p s) }
     @branch                 { (\p s -> TokenBranch p s) }
     @uri_ref                { (\p s -> TokenURIRef p s) }
     @filename               { (\p s -> TokenFileName p s) }
@@ -89,6 +90,7 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenDifference AlexPosn
                 | TokenMin AlexPosn
                 | TokenMax AlexPosn
+                | TokenCount AlexPosn
                 | TokenSubjectElement AlexPosn
                 | TokenPredicateElement AlexPosn
                 | TokenObjectElement AlexPosn
@@ -128,6 +130,7 @@ tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenIntersection (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDifference (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenMin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)    
+tokenPosn (TokenCount (AlexPn a l c)) = show(l) ++ ":" ++ show(c)    
 tokenPosn (TokenMax (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSubjectElement (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPredicateElement (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
