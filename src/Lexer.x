@@ -62,6 +62,7 @@ tokens :-
     @operands               { (\p s -> TokenArithOperator p s) }
     @comparison             { (\p s -> TokenCompOperator p s) }
     @literal                { (\p s -> TokenLiteral p s) }
+    .                       { (\p s -> TtlError p s) } 
 
 
 
@@ -104,6 +105,7 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenSaveTo AlexPosn String
                 | TokenJoin AlexPosn
                 | TokenURIRef AlexPosn String
+                | TtlError AlexPosn String
                 deriving (Show, Eq)
 
 --useful for error reporting, to get the position of the token that caused the error
@@ -145,4 +147,6 @@ tokenPosn (TokenCompOperator (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSaveTo (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenURIRef (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
+tokenPosn (TtlError (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
+
 }
