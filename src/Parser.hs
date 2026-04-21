@@ -751,8 +751,10 @@ happySeq = happyDontSeq
 
 -- Improved Error Handling: shows remaining tokens to help debugging
 parseError :: [TtlToken] -> a
-parseError []     = error "Parse error: Unexpected end of input (EOF). Check for missing parameters or trailing newlines."
-parseError (t:ts) = error ("Parse error at " ++ (tokenPosn t) ++ " on token: " ++ show t ++ "\nRemaining stream: " ++ show ts)
+parseError [] = 
+    error "Parse error: Unexpected end of input (EOF)."
+parseError (t:ts) = 
+    error ("Parse error at " ++ Lexer.tokenPosn t ++ " on token: " ++ show t)
 
 data Line
     = LSaveQuery Query String

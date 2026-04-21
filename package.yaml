@@ -27,6 +27,7 @@ dependencies:
 - base >= 4.7 && < 5
 - array
 - containers
+- deepseq
 
 ghc-options:
 - -Wall
@@ -58,6 +59,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - turtle-lang
+
 
 tests:
   turtle-lang-test:

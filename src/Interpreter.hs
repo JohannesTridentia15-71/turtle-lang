@@ -1,7 +1,7 @@
 module Interpreter
     ( main
     , GraphState
-    , evaluate
+    , Interpreter.evaluate
     , evalQuery
     , evalSelect
     , evalCombine
@@ -24,6 +24,8 @@ import Data.List (groupBy, sortBy, maximumBy, minimumBy)
 import Data.Ord (comparing)
 import Text.Read (readMaybe)
 import Debug.Trace (traceShow)
+import Control.Exception
+import System.Exit
 
 type GraphState = Map.Map String [(String, String, String)]
 
@@ -40,7 +42,6 @@ inputFiles (_ : rest) = inputFiles rest
 
 -- Currently this code contains everything - over the next few days I will split into separate files to improve codestyle and readability
 -- Correct as of 19/04/2025 - mag1g24
-
 main :: IO ()
 main = do
     args <- getArgs
@@ -48,20 +49,35 @@ main = do
         [file] -> do
             input <- readFile file
             let tokens = alexScanTokens input
-            let ast = parseTTL tokens
+            
+            if any isError tokens 
+                then do
+                    let (TtlError p s) = head (filter isError tokens)
+                    putStrLn "--- LEXICAL ERROR ---"
+                    putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
+                    exitFailure
+                else do
+                    result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line)
+                    case result of
+                        Left ex -> do
+                            putStrLn "--- TURTLE PARSE ERROR ---"
+                            putStrLn $ displayException ex 
+                            exitFailure 
+                        Right ast -> do
+                            let ttlFiles    = inputFiles tokens
+                            let uniqueFiles = nub ttlFiles
 
-            let ttlFiles = inputFiles tokens
+                            fileContents <- mapM (\f -> do
+                                content <- readFile f
+                                let clean = unlines (normaliseTTL content)
+                                return (f, parseTurtleFile clean)
+                                ) uniqueFiles
+                            
+                            let initialState = Map.fromList fileContents
+                            
+                            Interpreter.evaluate ast initialState
+                            return ()
 
-            initialState <- do
-                let uniqueFiles = nub ttlFiles
-                fileContents <- mapM (\f -> do
-                    content <- readFile f
-                    let clean = unlines (normaliseTTL content)
-                    return (f, parseTurtleFile clean)
-                    ) uniqueFiles
-                return $ Map.fromList fileContents
-            _ <- evaluate ast initialState
-            return ()
         _ -> putStrLn "Usage: stack exec turtle-lang-exe -- <filename>"
 
 -- entry point: evaluate all statements from here
@@ -378,3 +394,11 @@ updateTriple (s, p, o) newVal
     | "#predicate" `isPrefixOf` newVal = (s, newVal, o)
     | otherwise                        = (s, p, newVal)
 
+
+isError :: TtlToken -> Bool
+isError (TtlError _ _) = True
+isError _              = False
+
+getErrorInfo :: TtlToken -> (AlexPosn, String)
+getErrorInfo (TtlError p s) = (p, s)
+getErrorInfo _              = error "Not an error token"
