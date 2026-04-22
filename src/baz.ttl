@@ -5,3 +5,4 @@ ex:Bob ex:hasAge 19 .
 ex:Charlie ex:hasAge 21 .
 ex:Alice ex:name "Alice" .
 ex:Alice ex:anotherNumber 30 .
+<http://example.org/Charlie> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/Staff> .

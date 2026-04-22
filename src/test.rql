@@ -1,1 +1,1 @@
-evaluate count select_from quux.ttl
+evaluate difference select_from quux.ttl select_from baz.ttl

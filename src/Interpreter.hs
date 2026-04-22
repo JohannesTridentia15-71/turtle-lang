@@ -26,6 +26,7 @@ import Text.Read (readMaybe)
 import Debug.Trace (traceShow)
 import Control.Exception
 import System.Exit
+import qualified System.IO.Strict as Strict
 
 type GraphState = Map.Map String [(String, String, String)]
 
@@ -48,35 +49,56 @@ main = do
     case args of
         [file] -> do
             input <- readFile file
-            let tokens = alexScanTokens input
-            
-            if any isError tokens 
-                then do
-                    let (TtlError p s) = head (filter isError tokens)
-                    putStrLn "--- LEXICAL ERROR ---"
-                    putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
-                    exitFailure
-                else do
-                    result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line)
-                    case result of
-                        Left ex -> do
-                            putStrLn "--- TURTLE PARSE ERROR ---"
-                            putStrLn $ displayException ex 
-                            exitFailure 
-                        Right ast -> do
-                            let ttlFiles    = inputFiles tokens
-                            let uniqueFiles = nub ttlFiles
+            if (head (words (input)) == "construct")
+                then do 
+                    let tokens = alexScanTokens input
+                    if any isError tokens 
+                        then do
+                            let (TtlError p s) = head (filter isError tokens)
+                            putStrLn "--- LEXICAL ERROR ---"
+                            putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
+                            exitFailure
+                        else do
+                            result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line)
+                            case result of
+                                Left ex -> do
+                                    putStrLn "--- TURTLE PARSE ERROR ---"
+                                    putStrLn $ displayException ex 
+                                    exitFailure 
+                                Right ast -> do
+                                    let ttlFiles    = inputFiles tokens
+                                    let targetName = head(nub ttlFiles)
+                                    writeFile targetName (serializeGraph [])
+                                    return ()
+            else do
+                let tokens = alexScanTokens input
+                if any isError tokens 
+                    then do
+                        let (TtlError p s) = head (filter isError tokens)
+                        putStrLn "--- LEXICAL ERROR ---"
+                        putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
+                        exitFailure
+                    else do
+                        result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line)
+                        case result of
+                            Left ex -> do
+                                putStrLn "--- TURTLE PARSE ERROR ---"
+                                putStrLn $ displayException ex 
+                                exitFailure 
+                            Right ast -> do
+                                let ttlFiles    = inputFiles tokens
+                                let uniqueFiles = nub ttlFiles
 
-                            fileContents <- mapM (\f -> do
-                                content <- readFile f
-                                let clean = unlines (normaliseTTL content)
-                                return (f, parseTurtleFile clean)
-                                ) uniqueFiles
-                            
-                            let initialState = Map.fromList fileContents
-                            
-                            Interpreter.evaluate ast initialState
-                            return ()
+                                fileContents <- mapM (\f -> do
+                                    content <- Strict.readFile f
+                                    let clean = unlines (normaliseTTL content)
+                                    return (f, parseTurtleFile clean)
+                                    ) uniqueFiles
+                                
+                                let initialState = Map.fromList fileContents
+                                
+                                Interpreter.evaluate ast initialState
+                                return ()
 
         _ -> putStrLn "Usage: stack exec turtle-lang-exe -- <filename>"
 
@@ -85,7 +107,7 @@ evaluate :: Line -> GraphState -> IO GraphState
 evaluate (LSaveQuery query targetName) state = do
     let newTriples = evalQuery query state
     let newState = Map.insert targetName newTriples state
-    writeFile targetName (serializeGraph newTriples)
+    appendFile targetName (serializeGraph newTriples)
     return newState
 
 evaluate (LNoSaveQuery query) state = do
@@ -166,6 +188,12 @@ evalDelete (DqWhere name fStart) state =
 
 -- Add Case
 evalAdd :: AddQuery -> GraphState -> [(String, String, String)]
+evalAdd (AddQ branchStr) state =
+    let g      = []
+        parts  = parseBranchStr branchStr
+    in if length parts >= 3
+       then (parts !! 0, parts !! 1, parts !! 2) : g
+       else g
 
 parseBranchStr :: String -> [String]
 parseBranchStr s
@@ -180,12 +208,6 @@ parseBranchStr s
     go xs       = let (w, rest) = break (\c -> c == '<' || c == '"') xs
                   in [w | not (null w)] ++ go rest
 
-evalAdd (AddQ branchStr name) state =
-    let g      = Map.findWithDefault [] name state
-        parts  = parseBranchStr branchStr
-    in if length parts >= 3
-       then (parts !! 0, parts !! 1, parts !! 2) : g
-       else g
 
 -- Combine Case
 evalCombine :: CombineQuery -> GraphState -> [(String, String, String)]
@@ -204,7 +226,7 @@ evalReplace (RqObject targetName selectQuery newElem) state =
 
 -- Construct Case 
 evalConstruct :: ConstructQuery -> GraphState -> [(String, String, String)]
-evalConstruct (Cq name) _ = [] -- Usually creates a new empty graph structure
+evalConstruct (Cq name) _ = [] 
 
 
 -- select statements
@@ -259,14 +281,14 @@ evalGraphOp op state = case op of
         serializeGraph $ nub (getGraphBySel sel1 state ++ getGraphBySel sel2 state)
 
     GIntersection sel1 sel2 ->
-        let g1 = getGraphBySel sel1 state
-            g2 = getGraphBySel sel2 state
+        let g1 = evalSelect sel1 state
+            g2 = evalSelect sel2 state
         in serializeGraph [t | t <- g1, t `elem` g2]
 
     GDifference sel1 sel2 ->
         let g1 = getGraphBySel sel1 state
             g2 = getGraphBySel sel2 state
-        in serializeGraph [t | t <- g1, not (t `elem` g2)]
+        in serializeGraph ([t | t <- g1, not (t `elem` g2)] ++ [t | t <- g2, not (t `elem` g1)] ) 
 
     GSingle (GMax sq) -> serializeGraph (evalMaxTriples (getGraphBySel sq state))
 
