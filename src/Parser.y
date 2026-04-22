@@ -101,10 +101,10 @@ CombineQuery
     | SelectQuery                              { CNested $1 }
 
 AddQuery
-    : add branch to Identifier                            { AddQ $2 $4 }
-    | add uri_ref uri_ref uri_ref to Identifier           { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) $6 }
-    | add uri_ref uri_ref literal to Identifier           { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) $6 }
-    | add uri_ref uri_ref uri_ref to graph_name           { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) $6 }
+    : add branch                             { AddQ $2 }
+    | add uri_ref uri_ref uri_ref            { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) }
+    | add uri_ref uri_ref literal            { AddQ ($2 ++ " " ++ $3 ++ " " ++ $4) }
+
 
 ReplaceQuery
     : in Identifier replace SelectEmptyQuery with element
@@ -221,7 +221,7 @@ data CombineQuery
     deriving (Show, Eq)
 
 data AddQuery
-    = AddQ String String
+    = AddQ String
     deriving (Show, Eq)
 
 data ReplaceQuery

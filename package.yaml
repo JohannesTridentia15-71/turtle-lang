@@ -27,7 +27,7 @@ dependencies:
 - base >= 4.7 && < 5
 - array
 - containers
-- deepseq
+- strict
 
 ghc-options:
 - -Wall
