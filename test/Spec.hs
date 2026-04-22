@@ -18,7 +18,9 @@ import Interpreter
 -- Helpers
 
 parse :: String -> Line
-parse = parseTTL . alexScanTokens
+parse input = case parseTTL (alexScanTokens input) of
+    LBase l -> l
+    LPipedQuery _ _ -> error "parse: expected single line, got pipeline"
 
 tokenTag :: TtlToken -> String
 tokenTag (TokenSelectFrom _)    = "SelectFrom"
@@ -136,12 +138,12 @@ parserTests = TestLabel "Parser" $ TestList
         ~?= LNoSaveQuery (QDelete (Dq "foo.ttl"))
 
     , "parse: construct graph" ~:
-        parse "construct foo.ttl"
-        ~?= LNoSaveQuery (QConstruct (Cq "foo.ttl"))
+        parse "construct"
+        ~?= LNoSaveQuery QConstruct
 
     , "parse: add branch to graph" ~:
-        parse "add <a><b><c> to foo.ttl"
-        ~?= LNoSaveQuery (QAdd (AddQ "<a><b><c>" "foo.ttl"))
+        parse "add <a><b><c>"
+        ~?= LNoSaveQuery (QAdd (AddQ "<a><b><c>"))
 
     , "parse: simple where filter (no start)" ~:
         parse "select from foo.ttl where = #predicate CompanyA"

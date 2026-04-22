@@ -399,10 +399,7 @@ compareTriples (s1, p1, o1) (s2, p2, o2) =
         c  -> c
 
 compareTokens :: String -> String -> Ordering
-compareTokens a b
-    | isInt a && isInt b = compare (read a :: Int) (read b :: Int)
-    | otherwise          = compare a b
-  where isInt s = not (null s) && all isDigit s
+compareTokens a b = compare a b
 
 updateTriple :: (String, String, String) -> String -> (String, String, String)
 updateTriple (s, p, o) newVal
