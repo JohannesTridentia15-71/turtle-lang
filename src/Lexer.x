@@ -26,7 +26,7 @@ tokens :-
     $white+                 ; 
     \(                      ;
     \)                      ;
-    "select_from"           { (\p s -> TokenSelectFrom p) }
+    "select from"           { (\p s -> TokenSelectFrom p) }
     "select object"         { (\p s -> TokenSelectObject p) }
     "transitive_join"       { (\p s -> TokenJoin p) }
     "select"                { (\p s -> TokenSelect p) }
@@ -54,7 +54,7 @@ tokens :-
     "#subject"              { (\p s -> TokenSubjectElement p) }
     "#predicate"            { (\p s -> TokenPredicateElement p) }
     "#object"               { (\p s -> TokenObjectElement p) }
-    "save_to"               { (\p s -> TokenSaveTo p s) }
+    "save to"               { (\p s -> TokenSaveTo p s) }
     "|"                     { (\p s -> TokenPipe p ) }
     @branch                 { (\p s -> TokenBranch p s) }
     @uri_ref                { (\p s -> TokenURIRef p s) }
