@@ -49,88 +49,70 @@ main = do
     case args of
         [file] -> do
             input <- readFile file
-            if (head (words (input)) == "construct")
-                then do 
-                    let tokens = alexScanTokens input
-                    if any isError tokens 
-                        then do
-                            let (TtlError p s) = head (filter isError tokens)
-                            putStrLn "--- LEXICAL ERROR ---"
-                            putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
-                            exitFailure
-                        else do
-                            result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line)
-                            case result of
-                                Left ex -> do
-                                    putStrLn "--- TURTLE PARSE ERROR ---"
-                                    putStrLn $ displayException ex 
-                                    exitFailure 
-                                Right ast -> do
-                                    let ttlFiles    = inputFiles tokens
-                                    let targetName = head(nub ttlFiles)
-                                    writeFile targetName (serializeGraph [])
-                                    return ()
+            let tokens = alexScanTokens input
+            if any isError tokens 
+            then do
+                let (TtlError p s) = head (filter isError tokens)
+                putStrLn "--- LEXICAL ERROR ---"
+                putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
+                exitFailure
             else do
-                let tokens = alexScanTokens input
-                if any isError tokens 
-                    then do
-                        let (TtlError p s) = head (filter isError tokens)
-                        putStrLn "--- LEXICAL ERROR ---"
-                        putStrLn $ "Lexical error at " ++ show p ++ " on character: " ++ s
-                        exitFailure
-                    else do
-                        result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line)
-                        case result of
-                            Left ex -> do
-                                putStrLn "--- TURTLE PARSE ERROR ---"
-                                putStrLn $ displayException ex 
-                                exitFailure 
-                            Right ast -> do
-                                let ttlFiles    = inputFiles tokens
-                                let uniqueFiles = nub ttlFiles
-
-                                fileContents <- mapM (\f -> do
-                                    content <- Strict.readFile f
-                                    let clean = unlines (normaliseTTL content)
-                                    return (f, parseTurtleFile clean)
-                                    ) uniqueFiles
+                result <- try (Control.Exception.evaluate $ parseTTL tokens) :: IO (Either SomeException Line1)
+                case result of
+                    Left ex -> do
+                        putStrLn "--- TURTLE PARSE ERROR ---"
+                        putStrLn $ displayException ex 
+                        exitFailure 
+                    Right ast -> do
+                        let ttlFiles    = inputFiles tokens
+                        let uniqueFiles = nub ttlFiles
+                        fileContents <- mapM (\f -> do
+                                content <- Strict.readFile f
+                                let clean = unlines (normaliseTTL content)
+                                return (f, parseTurtleFile clean)
+                                ) uniqueFiles
                                 
-                                let initialState = Map.fromList fileContents
+                        let initialState = Map.fromList fileContents
                                 
-                                Interpreter.evaluate ast initialState
-                                return ()
+                        Interpreter.evaluate ast initialState
+                        return ()
 
         _ -> putStrLn "Usage: stack exec turtle-lang-exe -- <filename>"
 
 -- entry point: evaluate all statements from here
-evaluate :: Line -> GraphState -> IO GraphState
-evaluate (LSaveQuery query targetName) state = do
+evaluate :: Line1 -> GraphState -> IO GraphState
+
+evaluate (LPipedQuery recursiveLine currentLine) state = do
+    nextState <- Interpreter.evaluate recursiveLine state
+    Interpreter.evaluate (LBase currentLine) nextState
+
+evaluate (LBase (LSaveQuery query targetName)) state = do
     let newTriples = evalQuery query state
     let newState = Map.insert targetName newTriples state
     appendFile targetName (serializeGraph newTriples)
     return newState
 
-evaluate (LNoSaveQuery query) state = do
+evaluate (LBase(LNoSaveQuery query)) state = do
     let result = evalQuery query state
     putStr (serializeGraph result)
     return state
 
-evaluate (LEval (OpJoin g1 g2 cond) fname) state = do
+evaluate (LBase(LEval (OpJoin g1 g2 cond) fname)) state = do
     let result = evalJoin g1 g2 cond state
     writeFile fname (serializeGraph result)
     return (Map.insert fname result state)
 
-evaluate (LEval operation fname) state = do
+evaluate (LBase(LEval operation fname)) state = do
     let result = evalOperation operation state
     writeFile fname result
     return state
 
-evaluate (LNoSaveEval (OpJoin g1 g2 cond)) state = do
+evaluate (LBase(LNoSaveEval (OpJoin g1 g2 cond)) )state = do
     let result = evalJoin g1 g2 cond state
     putStr (serializeGraph result)
     return state
 
-evaluate (LNoSaveEval operation) state = do
+evaluate (LBase(LNoSaveEval operation)) state = do
     let result = evalOperation operation state
     putStr result
     return state
@@ -177,7 +159,7 @@ evalQuery (QDelete dq)    state = evalDelete dq state
 evalQuery (QAdd aq)       state = evalAdd aq state
 evalQuery (QCombine cq)   state = evalCombine cq state
 evalQuery (QReplace rq)   state = evalReplace rq state
-evalQuery (QConstruct cq) state = evalConstruct cq state
+evalQuery (QConstruct) state = []
 
 -- Delete Case
 evalDelete :: DeleteQuery -> GraphState -> [(String, String, String)]
@@ -222,11 +204,6 @@ evalReplace (RqObject targetName selectQuery newElem) state =
         -- Identify which triples match the selection to be replaced
         toReplace = evalSelectEmpty selectQuery state
     in map (\t -> if t `elem` toReplace then updateTriple t newElem else t) g
-
-
--- Construct Case 
-evalConstruct :: ConstructQuery -> GraphState -> [(String, String, String)]
-evalConstruct (Cq name) _ = [] 
 
 
 -- select statements

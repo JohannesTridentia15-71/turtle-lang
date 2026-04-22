@@ -42,6 +42,7 @@ import Lexer
     element             { TokenElement _ $$ }
     arith_operand       { TokenArithOperator _ $$ }
     comp_operand        { TokenCompOperator _ $$ }
+    pipe                { TokenPipe _ }
     save_to             { TokenSaveTo _ $$ }
     literal             { TokenLiteral _ $$ }
     uri_ref             { TokenURIRef _ $$ }
@@ -52,7 +53,12 @@ import Lexer
 
 %%
 
--- Entry Point: Accepts commands with or without 'save_to'
+Top : Line1 { $1 }
+
+Line1 
+    : Line1 pipe Line   { LPipedQuery $1 $3 }
+    | Line             { LBase $1 }
+
 Line
     : Query save_to Identifier                 { LSaveQuery $1 $3 }
     | Query                                    { LNoSaveQuery $1  } 
@@ -63,7 +69,7 @@ Query
     : CombineQuery                             { QCombine $1 }
     | AddQuery                                 { QAdd $1 }
     | ReplaceQuery                             { QReplace $1 }
-    | ConstructQuery                           { QConstruct $1 }
+    | construct                           { QConstruct }
     | DeleteQuery                              { QDelete $1 }
 
 SelectQuery
@@ -112,8 +118,6 @@ ReplaceQuery
     | in Identifier replace SelectEmptyQuery with SelectObjectQuery
                                                { RqSelectObject $2 $4 $6 }
 
-ConstructQuery
-    : construct Identifier                     { Cq $2 }
 
 DeleteQuery
     : delete Identifier                        { Dq $2 }
@@ -173,6 +177,11 @@ parseError [] =
 parseError (t:ts) = 
     error ("Parse error at " ++ Lexer.tokenPosn t ++ " on token: " ++ show t)
 
+data Line1
+    = LPipedQuery Line1 Line 
+    | LBase Line             
+    deriving (Show, Eq)
+
 data Line
     = LSaveQuery Query String
     | LNoSaveQuery Query
@@ -184,7 +193,7 @@ data Query
     = QCombine CombineQuery
     | QAdd AddQuery
     | QReplace ReplaceQuery
-    | QConstruct ConstructQuery
+    | QConstruct
     | QDelete DeleteQuery
     deriving (Show, Eq)
 
@@ -227,10 +236,6 @@ data AddQuery
 data ReplaceQuery
     = RqObject String SelectEmptyQuery String
     | RqSelectObject String SelectEmptyQuery SelectObjectQuery
-    deriving (Show, Eq)
-
-data ConstructQuery
-    = Cq String
     deriving (Show, Eq)
 
 data DeleteQuery

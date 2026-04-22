@@ -55,6 +55,7 @@ tokens :-
     "#predicate"            { (\p s -> TokenPredicateElement p) }
     "#object"               { (\p s -> TokenObjectElement p) }
     "save_to"               { (\p s -> TokenSaveTo p s) }
+    "|"                     { (\p s -> TokenPipe p ) }
     @branch                 { (\p s -> TokenBranch p s) }
     @uri_ref                { (\p s -> TokenURIRef p s) }
     @filename               { (\p s -> TokenFileName p s) }
@@ -106,6 +107,7 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenJoin AlexPosn
                 | TokenURIRef AlexPosn String
                 | TtlError AlexPosn String
+                | TokenPipe AlexPosn
                 deriving (Show, Eq)
 
 --useful for error reporting, to get the position of the token that caused the error
@@ -148,5 +150,5 @@ tokenPosn (TokenSaveTo (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenURIRef (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
 tokenPosn (TtlError (AlexPn a l c) s) = show(l) ++ ":" ++ show(c)
-
+tokenPosn (TokenPipe (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }
