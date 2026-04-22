@@ -1,1 +1,1 @@
-construct save_to testpiping.ttl | add <http://example.org/Charlie> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/Staff> save_to testpiping.ttl
+evaluate min select_from prices.ttl

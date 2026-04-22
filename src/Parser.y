@@ -21,6 +21,9 @@ import Lexer
     or                  { TokenOr _ }
     not                 { TokenNot _ }
     replace             { TokenReplace _ }
+    replace_subject     { TokenReplaceSub _ }
+    replace_predicate   { TokenReplacePred _ }
+    replace_object      { TokenReplaceOb _ }
     with                { TokenWith _ }
     construct           { TokenConstruct _ }
     delete              { TokenDelete _ }
@@ -113,10 +116,12 @@ AddQuery
 
 
 ReplaceQuery
-    : in Identifier replace SelectEmptyQuery with element
-                                               { RqObject $2 $4 $6 }
-    | in Identifier replace SelectEmptyQuery with SelectObjectQuery
-                                               { RqSelectObject $2 $4 $6 }
+    : in SelectQuery replace_object with uri_ref
+                                               { RqObject $2 $5 }
+    | in SelectQuery replace_object with literal
+                                               { RqObject $2 $5 }
+    | in SelectQuery replace_predicate with uri_ref { RqPredicate $2 $5 }
+    | in SelectQuery replace_subject with uri_ref   { RqSubject $2 $5 }
 
 
 DeleteQuery
@@ -234,8 +239,9 @@ data AddQuery
     deriving (Show, Eq)
 
 data ReplaceQuery
-    = RqObject String SelectEmptyQuery String
-    | RqSelectObject String SelectEmptyQuery SelectObjectQuery
+    = RqObject SelectQuery String
+    | RqPredicate SelectQuery String
+    | RqSubject SelectQuery String
     deriving (Show, Eq)
 
 data DeleteQuery

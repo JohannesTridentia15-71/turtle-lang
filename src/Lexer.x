@@ -27,7 +27,7 @@ tokens :-
     \(                      ;
     \)                      ;
     "select_from"           { (\p s -> TokenSelectFrom p) }
-    "select object"         { (\p s -> TokenSelectObject p) }
+    "select_object"         { (\p s -> TokenSelectObject p) }
     "transitive_join"       { (\p s -> TokenJoin p) }
     "select"                { (\p s -> TokenSelect p) }
     "where"                 { (\p s -> TokenWhere p) }
@@ -37,6 +37,9 @@ tokens :-
     "to"                    { (\p s -> TokenTo p) }
     "in"                    { (\p s -> TokenIn p) }
     "replace"               { (\p s -> TokenReplace p) }
+    "replace_subject"       { (\p s -> TokenReplaceSub p) }
+    "replace_predicate"     { (\p s -> TokenReplacePred p) }
+    "replace_object"        { (\p s -> TokenReplaceOb p) }
     "with"                  { (\p s -> TokenWith p) }
     "construct"             { (\p s -> TokenConstruct p) }
     "delete"                { (\p s -> TokenDelete p) }
@@ -82,6 +85,9 @@ data TtlToken = TokenSelectFrom AlexPosn
                 | TokenOr AlexPosn
                 | TokenNot AlexPosn
                 | TokenReplace AlexPosn
+                | TokenReplaceSub AlexPosn
+                | TokenReplacePred AlexPosn
+                | TokenReplaceOb AlexPosn
                 | TokenWith AlexPosn
                 | TokenConstruct AlexPosn
                 | TokenDelete AlexPosn
@@ -125,6 +131,9 @@ tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReplace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenReplaceSub (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenReplacePred (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenReplaceOb (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWith (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenConstruct (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDelete (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

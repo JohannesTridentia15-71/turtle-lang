@@ -1,0 +1,12 @@
+<http://example.org/Alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 2.
+<http://example.org/Alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 17 .
+<http://example.org/Alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 19 .
+<http://example.org/Alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 4 .
+<http://example.org/Alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 7 .
+
+<http://example.org/Bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 3.
+<http://example.org/Bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 17 .
+<http://example.org/Bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 19 .
+<http://example.org/Bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 4 .
+<http://example.org/Bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> 7 .
+

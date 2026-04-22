@@ -89,7 +89,7 @@ evaluate (LPipedQuery recursiveLine currentLine) state = do
 evaluate (LBase (LSaveQuery query targetName)) state = do
     let newTriples = evalQuery query state
     let newState = Map.insert targetName newTriples state
-    appendFile targetName (serializeGraph newTriples)
+    writeFile targetName (serializeGraph newTriples)
     return newState
 
 evaluate (LBase(LNoSaveQuery query)) state = do
@@ -199,12 +199,29 @@ evalCombine (CCombine cq sq) state =
 
 -- Replace Case
 evalReplace :: ReplaceQuery -> GraphState -> [(String, String, String)]
-evalReplace (RqObject targetName selectQuery newElem) state =
-    let g = Map.findWithDefault [] targetName state
-        -- Identify which triples match the selection to be replaced
-        toReplace = evalSelectEmpty selectQuery state
-    in map (\t -> if t `elem` toReplace then updateTriple t newElem else t) g
+evalReplace query state = 
+    let 
+        selectQuery = case query of
+            RqObject q _    -> q
+            RqPredicate q _ -> q
+            RqSubject q _   -> q
+        targetName = getTarget selectQuery
+        toReplace = evalSelect selectQuery state
+        g = Map.findWithDefault [] targetName state
 
+        transform triple@(s, p, o)
+            | triple `elem` toReplace = case query of
+                RqSubject _ newS   -> (newS, p, o)
+                RqPredicate _ newP -> (s, newP, o)
+                RqObject _ newO    -> (s, p, newO)
+            | otherwise = triple
+
+    in map transform g
+
+getTarget :: SelectQuery -> String
+getTarget (SQAll name) = name
+getTarget (SQWhere name _) = name
+getTarget (SQElement (SElem _ name _)) = name
 
 -- select statements
 evalSelect :: SelectQuery -> GraphState -> [(String, String, String)]

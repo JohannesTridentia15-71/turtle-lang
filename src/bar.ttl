@@ -1,8 +1,0 @@
-<http://example.org/Alice> <http://ont.example.org/worksFor> <http://example.org/CompanyA> .
-<http://example.org/Alice> <http://ont.example.org/livesIn> "London" .
-<http://example.org/Bob> <http://ont.example.org/worksFor> <http://example.org/CompanyB> .
-<http://example.org/Bob> <http://ont.example.org/livesIn> "New York" .
-<http://example.org/Charlie> <http://ont.example.org/worksFor> <http://example.org/CompanyA> .
-<http://example.org/Charlie> <http://ont.example.org/livesIn> "London" .
-<http://example.org/CompanyA> <http://ont.example.org/locatedIn> "United Kingdom" .
-<http://example.org/CompanyB> <http://ont.example.org/locatedIn> "USA" .
