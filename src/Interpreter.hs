@@ -15,6 +15,7 @@ import Lexer
 import Parser
 import Normalise (normaliseTTL)
 import System.Environment (getArgs)
+import Control.Monad (filterM)
 import qualified Data.Map as Map -- used for findWithDefault to avoid errors 
 import Data.List (isPrefixOf)
 import Data.List (isSuffixOf)
@@ -27,6 +28,7 @@ import Debug.Trace (traceShow)
 import Control.Exception
 import System.Exit
 import qualified System.IO.Strict as Strict
+import System.Directory (doesFileExist)
 
 type GraphState = Map.Map String [(String, String, String)]
 
@@ -41,8 +43,7 @@ inputFiles (TokenLiteral _ s : rest)
     | otherwise             = inputFiles rest
 inputFiles (_ : rest) = inputFiles rest
 
--- Currently this code contains everything - over the next few days I will split into separate files to improve codestyle and readability
--- Correct as of 19/04/2025 - mag1g24
+
 main :: IO ()
 main = do
     args <- getArgs
@@ -65,7 +66,7 @@ main = do
                         exitFailure 
                     Right ast -> do
                         let ttlFiles    = inputFiles tokens
-                        let uniqueFiles = nub ttlFiles
+                        uniqueFiles <- filterM doesFileExist (nub ttlFiles)
                         fileContents <- mapM (\f -> do
                                 content <- Strict.readFile f
                                 let clean = unlines (normaliseTTL content)

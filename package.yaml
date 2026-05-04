@@ -28,6 +28,7 @@ dependencies:
 - array
 - containers
 - strict
+- directory
 
 ghc-options:
 - -Wall
