@@ -1,3 +1,2 @@
 <http://example.org/Alice> <http://ont.example.org/worksFor> <http://example.org/CompanyA> .
 <http://example.org/Dave> <http://ont.example.org/livesIn> "Berlin" .
-<http://example.org/Eve> <http://ont.example.org/livesIn> "Paris" .

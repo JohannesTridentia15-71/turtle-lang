@@ -1,0 +1,1 @@
+<http://example.org/mywork> <http://purl.org/dc/elements/1.0/creator> <http://example.org/john> .

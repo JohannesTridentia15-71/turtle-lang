@@ -1,0 +1,4 @@
+select_from foo.ttl where == #predicate <http://purl.org/dc/elements/1.0/creator> save_to temp10a.ttl |
+select_from foo.ttl where == #predicate <http://purl.org/dc/elements/1.1/creator> save_to temp10b.ttl |
+combine select_from temp10a.ttl select_from temp10b.ttl save_to temp10c.ttl |
+in select_from temp10c.ttl replace_predicate with <http://purl.org/dc/terms/creator>

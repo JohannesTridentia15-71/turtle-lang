@@ -1,0 +1,1 @@
+<http://example.org/jane> <http://ont.example.org/age> 30 .

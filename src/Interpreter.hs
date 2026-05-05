@@ -283,7 +283,7 @@ evalGraphOp op state = case op of
     GDifference sel1 sel2 ->
         let g1 = getGraphBySel sel1 state
             g2 = getGraphBySel sel2 state
-        in serializeGraph ([t | t <- g1, not (t `elem` g2)] ++ [t | t <- g2, not (t `elem` g1)] ) 
+        in serializeGraph ([t | t <- g1, not (t `elem` g2)] ++ [t | t <- g2, not (t `elem` g1)] )
 
     GSingle (GMax sq) -> serializeGraph (evalMaxTriples (getGraphBySel sq state))
 

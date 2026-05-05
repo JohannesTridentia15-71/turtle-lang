@@ -1,0 +1,16 @@
+KNOWN ISSUE: evaluate difference computes symmetric difference, not left difference.
+
+When baz contains triples NOT in (foo union bar), those baz-only triples are
+incorrectly included in the output (symmetric difference adds them back).
+
+Actual output (incorrect):
+  <http://example.org/Alice> <http://ont.example.org/worksFor> <http://example.org/CompanyA> .
+  <http://example.org/Bob> <http://ont.example.org/worksFor> <http://example.org/CompanyB> .
+  <http://example.org/Charlie> <http://ont.example.org/livesIn> "London" .    <- phantom
+
+Correct expected output (left difference: (foo union bar) minus baz):
+  <http://example.org/Alice> <http://ont.example.org/worksFor> <http://example.org/CompanyA> .
+  <http://example.org/Bob> <http://ont.example.org/worksFor> <http://example.org/CompanyB> .
+
+The Charlie triple in baz has no overlap with foo or bar, so a true left
+difference (foo union bar) \ baz would return all of foo union bar unchanged.

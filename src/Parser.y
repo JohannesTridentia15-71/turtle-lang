@@ -265,16 +265,16 @@ data ComparisonOperation
     deriving (Show, Eq)
 
 data GraphOperation
-    = GUnion SelectQuery SelectQuery      
+    = GUnion SelectQuery SelectQuery
     | GIntersection SelectQuery SelectQuery
     | GDifference SelectQuery SelectQuery
     | GSingle GraphOperationSingle
     deriving (Show, Eq)
 
 data GraphOperationSingle
-    = GMin SelectQuery                    
-    | GMax SelectQuery 
-    | GCount SelectQuery                   
+    = GMin SelectQuery
+    | GMax SelectQuery
+    | GCount SelectQuery
     deriving (Show, Eq)
 
 data FilterStart

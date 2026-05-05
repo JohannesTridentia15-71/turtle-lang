@@ -1,0 +1,26 @@
+KNOWN ISSUE: anti-join via replace-chain produces a phantom triple when the
+"knows nmg" subject is not itself typed as foaf:Person.
+
+Setup: carol knows nmg but is NOT rdf:type foaf:Person.
+       dave IS rdf:type foaf:Person and does NOT know nmg.
+
+How the bug manifests:
+  Step 1: t8knows  = { (carol, foaf:knows, nmg) }
+  Step 2: t8knows2 = { (carol, rdf:type, nmg) }    [replace predicate]
+  Step 3: t8excl   = { (carol, rdf:type, foaf:Person) }  [replace object]
+  Step 4: t8persons= { (dave,  rdf:type, foaf:Person) }  [select from foo]
+  Step 5: difference(t8persons, t8excl)
+            = triples in t8persons not in t8excl  => { (dave, rdf:type, foaf:Person) }
+            + triples in t8excl   not in t8persons => { (carol, rdf:type, foaf:Person) } <- phantom
+
+Actual output (incorrect):
+  <http://example.org/carol> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+  <http://example.org/dave>  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+
+Correct expected output:
+  <http://example.org/dave> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+
+The phantom arises because evaluate difference is symmetric: it adds back
+carol (from the exclusion set) even though carol was never a Person to begin
+with. The anti-join pattern only works correctly when every "knows nmg" subject
+is also typed as foaf:Person.

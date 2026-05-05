@@ -1,0 +1,4 @@
+<http://example.org/A> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://example.org/B> .
+<http://example.org/C> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://example.org/B> .
+<http://example.org/D> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://example.org/E> .
+<http://example.org/E> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://example.org/F> .

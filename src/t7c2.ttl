@@ -1,0 +1,1 @@
+<http://example.org/carol> <http://ont.example.org/worksFor> "Sally" .

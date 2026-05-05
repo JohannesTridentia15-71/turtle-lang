@@ -1,0 +1,5 @@
+select_from foo.ttl where == #predicate <http://xmlns.com/foaf/0.1/knows> and == #object <http://example.org/nmg> save_to t8knows.ttl |
+in select_from t8knows.ttl replace_predicate with <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> save_to t8knows2.ttl |
+in select_from t8knows2.ttl replace_object with <http://xmlns.com/foaf/0.1/Person> save_to t8excl.ttl |
+select_from foo.ttl where == #predicate <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> and == #object <http://xmlns.com/foaf/0.1/Person> save_to t8persons.ttl |
+evaluate difference select_from t8persons.ttl select_from t8excl.ttl

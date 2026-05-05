@@ -1,0 +1,27 @@
+KNOWN ISSUE: transitive_join cannot handle the "shared object" equivalence pattern.
+
+When two subjects both point to the same object via owl:sameAs (A→B and C→B),
+equivalence reasoning requires inferring A↔C. The current approach reuses
+transitive_join, which is hardcoded to match g1.object == g2.subject, so it
+can only chain A→B→C, not merge A→B and C→B.
+
+Setup: A sameAs B, C sameAs B  =>  A should be inferred sameAs C (and vice versa)
+
+What transitive_join does:
+  t9type = { (A, rdf:type, B), (C, rdf:type, B) }
+  t9sub  = { (A, rdfs:subClassOf, B), (C, rdfs:subClassOf, B) }
+  Join condition: g1.object == g2.subject
+    (A, rdf:type, B) + (A, rdfs:subClassOf, B): B != A -> skip
+    (A, rdf:type, B) + (C, rdfs:subClassOf, B): B != C -> skip
+    (C, rdf:type, B) + (A, rdfs:subClassOf, B): B != A -> skip
+    (C, rdf:type, B) + (C, rdfs:subClassOf, B): B != C -> skip
+  => t9chained is empty
+
+Actual output: (empty)
+
+Correct expected output:
+  <http://example.org/A> <http://www.w3.org/2002/07/owl#sameAs> <http://example.org/C> .
+  <http://example.org/C> <http://www.w3.org/2002/07/owl#sameAs> <http://example.org/A> .
+
+This case would require a different join condition (g1.object == g2.object) which
+the hardcoded transitive_join does not support.

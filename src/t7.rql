@@ -1,0 +1,5 @@
+select_from foo.ttl where == #subject <http://example.org/jane> and != #predicate <http://ont.example.org/hasName> and != #object "Fred" and != #object "Sally" save_to t7a.ttl |
+select_from foo.ttl where == #predicate <http://ont.example.org/hasName> and != #subject <http://example.org/jane> and != #object "Fred" and != #object "Sally" save_to t7b.ttl |
+select_from foo.ttl where == #object "Fred" and != #subject <http://example.org/jane> and != #predicate <http://ont.example.org/hasName> save_to t7c1.ttl |
+select_from foo.ttl where == #object "Sally" and != #subject <http://example.org/jane> and != #predicate <http://ont.example.org/hasName> save_to t7c2.ttl |
+combine combine combine select_from t7a.ttl select_from t7b.ttl select_from t7c1.ttl select_from t7c2.ttl

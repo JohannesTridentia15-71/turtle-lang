@@ -1,0 +1,5 @@
+select_from foo.ttl where == #predicate <http://www.w3.org/2002/07/owl#sameAs> save_to t9sa.ttl |
+in select_from t9sa.ttl replace_predicate with <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> save_to t9type.ttl |
+in select_from t9sa.ttl replace_predicate with <http://www.w3.org/2000/01/rdf-schema#subClassOf> save_to t9sub.ttl |
+evaluate transitive_join t9type.ttl t9sub.ttl where #object == #subject save_to t9chained.ttl |
+in select_from t9chained.ttl replace_predicate with <http://www.w3.org/2002/07/owl#sameAs>

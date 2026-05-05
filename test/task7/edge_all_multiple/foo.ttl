@@ -1,0 +1,2 @@
+<http://example.org/jane> <http://ont.example.org/hasName> "Alice" .
+<http://example.org/jane> <http://ont.example.org/hasName> "Fred" .

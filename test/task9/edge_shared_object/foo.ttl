@@ -1,0 +1,2 @@
+<http://example.org/A> <http://www.w3.org/2002/07/owl#sameAs> <http://example.org/B> .
+<http://example.org/C> <http://www.w3.org/2002/07/owl#sameAs> <http://example.org/B> .
